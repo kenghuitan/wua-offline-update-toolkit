@@ -1,7 +1,9 @@
 # --------------------------------------------------
 # Title		: Windows Update Agent (Offline)
 # Author	: Benjamin TAN
-# Version	: 0.1b, 2023-02-09
+# Date			: 09-Feb-2023 (First Release)
+# Last Updated	: 19-Feb-2023
+# Build			: 0.1c
 #
 # Reference:
 # https://learn.microsoft.com/en-us/windows/win32/wua_sdk/using-wua-to-scan-for-updates-offline
@@ -19,7 +21,9 @@ Set-Variable -Name "L_Msg120" -Value "3) Download Updates"	-Option constant
 Set-Variable -Name "L_Msg130" -Value "4) Install Updates"	-Option constant
 Set-Variable -Name "L_Msg135" -Value "1) Download wsusscn2"	-Option constant
 Set-Variable -Name "L_Msg137" -Value "5) Run Cleanup"		-Option constant
-Set-Variable -Name "L_Msg140" -Value "6) Exit to Command Line"				-Option constant
+Set-Variable -Name "L_Msg155" -Value "6) Restart Computer"		-Option constant
+Set-Variable -Name "L_Msg160" -Value "7) Shutdown Computer"		-Option constant
+Set-Variable -Name "L_Msg140" -Value "8) Exit to Command Line"				-Option constant
 Set-Variable -Name "L_Msg150" -Value "Enter number to select an option "	-Option constant
 
 Set-Variable -Name "L_Msg161" -Value "***** Running Microsoft Baseline Security Analyzer ***************"	-Option constant
@@ -35,6 +39,9 @@ Set-Variable -Name "L_Msg170" -Value "***** Running Clean-up completed *********
 
 Set-Variable -Name "L_Msg171" -Value "`nDownloads started..."	-Option constant
 Set-Variable -Name "L_Msg172" -Value "`nDownloads finished..."	-Option constant
+Set-Variable -Name "L_Msg173" -Value "System has been restart by a process/user"	-Option constant
+Set-Variable -Name "L_Msg174" -Value "System has been shutdown by a process/user"	-Option constant
+
 
 $strPathInbox		= "inbox"
 $strPathOutbox		= "outbox"
@@ -172,7 +179,7 @@ function funcInstallWindowsUpdate {
 
 		# --------------------------
 		# For Update Package File
-		# --------------------------        
+		# --------------------------
         If ([IO.Path]::GetExtension($i) -eq ".msu") {      
             funcEventLog ($StrFile)      
             $process = Start-Process  -FilePath "C:\windows\system32\wusa.exe" -ArgumentList ($strFile + " /quiet /norestart") -PassThru -Wait
@@ -239,6 +246,21 @@ function funcCleanup {
 }
 
 # --------------------------------------------------
+# Function - Restart and Shutdown 
+# --------------------------------------------------
+function funcRestart {
+
+	Start-Sleep -Seconds 5
+	Restart-Computer -ComputerName localhost -Force
+}
+
+function funcShutdown {
+
+	Start-Sleep -Seconds 5
+	Stop-Computer -ComputerName localhost -Force
+}
+
+# --------------------------------------------------
 # Function - Write Log File
 # --------------------------------------------------
 function funcEventLog([string]$Message) {
@@ -251,6 +273,10 @@ function funcEventLog([string]$Message) {
 function funcDownloadLog([string]$Message) {
     $LogFile = $PSScriptRoot + "\" + $strPathOutbox + "\" + $strLogFileDownload
 	
+	if (Test-Path -Path $LogFile -PathType Leaf) {
+		Remove-Item LogFile
+	}
+
     Add-Content $LogFile -Value ("$Message")
 }
 
@@ -274,6 +300,8 @@ do {
 	Write-Host $L_Msg130
 	Write-Host
 	Write-Host $L_Msg137
+	Write-Host $L_Msg155
+	Write-Host $L_Msg160
 	Write-Host $L_Msg140
 	Write-Host
 	$selection = Read-Host $L_Msg150
@@ -315,8 +343,18 @@ do {
 			funcEventLog ($L_Msg170)
 			funcEventLog ("")
 		}
-		'6' {return}
+		'6' {
+			funcEventLog ("")
+			funcEventLog ($L_Msg173)
+			funcRestart
+		}
+		'7' {
+			funcEventLog ("")
+			funcEventLog ($L_Msg174)
+			funcShutdown
+		}
+		'8' {return}
 	}
  } until (
-	$selection -eq '6'
+	$selection -eq '8'
 	)
