@@ -14,5 +14,5 @@ A PowerShell-based **Windows Update Agent (WUA) Offline Updater** that allows sc
 ## 📥 Installation
 1. **Clone the repository**  
    ```sh
-   git clone https://github.com/yourusername/wua-offline-update-toolkit.git
+   git clone https://github.com/kenghuitan/wua-offline-update-toolkit.git
    cd wua-offline-update-toolkit
